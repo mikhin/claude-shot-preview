@@ -1,0 +1,19 @@
+{
+  "name": "claude-shot-preview",
+  "owner": {
+    "name": "Yuri Mikhin",
+    "url": "https://github.com/mikhin"
+  },
+  "plugins": [
+    {
+      "name": "shot-preview",
+      "source": "./",
+      "description": "Draws a thumbnail under a Claude reply that names a screenshot path, with a click to open it",
+      "category": "productivity",
+      "tags": ["screenshot", "image", "preview", "claude-in-chrome", "mod", "terminal"]
+    }
+  ],
+  "metadata": {
+    "description": "See the screenshot Claude names, not just its path"
+  }
+}

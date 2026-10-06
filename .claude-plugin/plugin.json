@@ -1,0 +1,17 @@
+{
+  "name": "shot-preview",
+  "displayName": "Shot Preview",
+  "version": "0.1.0",
+  "description": "Draws a thumbnail under a Claude reply that names a screenshot path, with a click to open it",
+  "author": {
+    "name": "Yuri Mikhin",
+    "url": "https://github.com/mikhin"
+  },
+  "homepage": "https://github.com/mikhin/claude-shot-preview",
+  "repository": "https://github.com/mikhin/claude-shot-preview",
+  "documentationUrl": "https://github.com/mikhin/claude-shot-preview#readme",
+  "supportUrl": "https://github.com/mikhin/claude-shot-preview/issues",
+  "license": "MIT",
+  "keywords": ["screenshot", "image", "preview", "claude-in-chrome", "mod", "terminal", "claude-code"],
+  "types": "./types/index.d.ts"
+}
