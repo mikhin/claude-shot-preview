@@ -2,8 +2,8 @@ import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
 import type { Platform, Preview } from '../types'
+import { imagePaths } from './paths'
 
-const IMAGE_PATH = /(?:[A-Za-z]:\\|\/)[^\s`'"()<>[\]]+\.(?:png|jpe?g)/gi
 const THUMB_COLUMNS = 36
 const THUMB_ROWS = 10
 
@@ -12,7 +12,17 @@ const platform = atom({ plugin: 'shot-preview', key: 'platform' } as const, null
 
 type $ = EngineInterface
 
-const imagePaths = (text: string): string[] => [...new Set(text.match(IMAGE_PATH) ?? [])]
+const resolvePath = async ($: $, path: string): Promise<string> => {
+  if (!path.startsWith('~/')) return path
+  const home = (await $.env.get('HOME')) ?? (await $.env.get('USERPROFILE')) ?? ''
+  return `${home.replace(/[/\\]$/, '')}${path.slice(1)}`
+}
+
+const hash = (text: string): string => {
+  let h = 0x811c9dc5
+  for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i), 0x01000193)
+  return (h >>> 0).toString(16)
+}
 
 const pixels = (out: string, name: string): number => Number(new RegExp(`${name}: (\\d+)`).exec(out)?.[1] ?? 0)
 
@@ -35,21 +45,22 @@ const OPEN: Record<Platform, (path: string) => string[]> = {
   windows: path => ['cmd', '/c', 'start', '""', path],
 }
 
-const toPreview = async ($: $, path: string): Promise<Preview> => {
-  const isPng = /\.png$/i.test(path)
-  if ((await detectPlatform($)) !== 'mac') return { png: isPng ? path : null, width: 0, height: 0 }
-  let png = path
+const toPreview = async ($: $, file: string): Promise<Preview> => {
+  const isPng = /\.png$/i.test(file)
+  if ((await detectPlatform($)) !== 'mac') return { file, png: isPng ? file : null, width: 0, height: 0 }
+  let png = file
   if (!isPng) {
     const tmp = ((await $.env.get('TMPDIR')) ?? '/tmp/').replace(/\/?$/, '/')
     const cache = `${tmp}claude-shots`
-    png = `${cache}/${path.split('/').at(-1)?.replace(/\.jpe?g$/i, '.png')}`
+    const { mtimeMs } = await $.fs.stat(file)
+    png = `${cache}/${hash(`${file}:${mtimeMs}`)}.png`
     if (!(await $.fs.exists(png))) {
       await $.process.run(['mkdir', '-p', cache])
-      await $.process.run(['sips', '-s', 'format', 'png', '-Z', '800', path, '--out', png])
+      await $.process.run(['sips', '-s', 'format', 'png', '-Z', '800', file, '--out', png])
     }
   }
   const { stdout } = await $.process.run(['sips', '-g', 'pixelWidth', '-g', 'pixelHeight', png])
-  return { png, width: pixels(stdout, 'pixelWidth'), height: pixels(stdout, 'pixelHeight') }
+  return { file, png, width: pixels(stdout, 'pixelWidth'), height: pixels(stdout, 'pixelHeight') }
 }
 
 const fit = (width: number, height: number) => {
@@ -67,7 +78,9 @@ export const register: Register = on => {
     const known = await read($, previews)
     const fresh: [string, Preview][] = []
     for (const path of imagePaths(text)) {
-      if (!known[path] && (await $.fs.exists(path))) fresh.push([path, await toPreview($, path)])
+      if (known[path]) continue
+      const file = await resolvePath($, path)
+      if (await $.fs.exists(file)) fresh.push([path, await toPreview($, file)])
     }
     if (fresh.length > 0) await update($, previews, all => ({ ...all, ...Object.fromEntries(fresh) }))
     return stored
@@ -94,7 +107,7 @@ export const register: Register = on => {
                   key={`open:${shot.path}`}
                   plain
                   dimColor
-                  onPress={async () => void (await $.process.run(OPEN[await detectPlatform($)](shot.path)))}
+                  onPress={async () => void (await $.process.run(OPEN[await detectPlatform($)](shot.file)))}
                 >
                   ↗ open
                 </Button>

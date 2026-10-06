@@ -33,8 +33,8 @@ Inside Claude Code, run:
 
 ## How it works
 
-1. A `session.append` hook reads each reply of the main conversation as it is stored and finds absolute paths ending in `.png`, `.jpg` or `.jpeg`.
-2. For each path that exists, it makes a preview: a PNG is used as is; a JPEG is turned into an 800 px PNG in `$TMPDIR/claude-shots/` (macOS).
+1. A `session.append` hook reads each reply of the main conversation as it is stored and finds paths ending in `.png`, `.jpg` or `.jpeg`: absolute, `~/`-relative or `C:\`-style. A path in backticks is taken whole, so `` `~/Scans/passport (1).jpg` `` works; a bare one ends at the first space.
+2. For each path that exists, it makes a preview: a PNG is used as is; a JPEG is turned into an 800 px PNG in `$TMPDIR/claude-shots/`, named by a hash of its path and modification time (macOS).
 3. A `ui.render` hook on the reply draws the reply as Claude Code does, then the thumbnails under it with Claude Code's `Image` element.
 
 Only replies written in the current session get a thumbnail: the mod remembers previews for the session alone, so a resumed conversation shows its old paths as text. Subagent replies are skipped.
@@ -49,7 +49,7 @@ The mod runs when Claude Code stores a reply and when you press **↗ open**.
   - `sips -s format png -Z 800 <image> --out <preview>.png` turns a JPEG into a PNG preview (macOS)
   - `sips -g pixelWidth -g pixelHeight <preview>.png` reads the preview's size (macOS)
   - on **↗ open**: `open <image>` on macOS, `xdg-open <image>` on Linux, `cmd /c start "" <image>` on Windows
-- **Files it reads and writes:** it reads the `OS` and `TMPDIR` environment variables, checks that each path named in a reply exists, and writes `<name>.png` previews to `$TMPDIR/claude-shots/`. It never deletes them; macOS clears that folder.
+- **Files it reads and writes:** it reads the `OS`, `TMPDIR`, `HOME` and `USERPROFILE` environment variables, checks that each path named in a reply exists and reads its modification time, and writes `<hash>.png` previews to `$TMPDIR/claude-shots/`. It never deletes them; macOS clears that folder.
 - **What it changes in your messages:** nothing. It adds thumbnails to how a reply is drawn; what Claude and you sent is stored unchanged.
 - **What it sends over the network:** nothing. The mod opens no connections.
 

@@ -1,4 +1,4 @@
-export type Preview = { png: string | null; width: number; height: number }
+export type Preview = { file: string; png: string | null; width: number; height: number }
 
 export type Platform = 'mac' | 'linux' | 'windows'
 

@@ -1,7 +1,7 @@
 {
   "name": "shot-preview",
   "displayName": "Shot Preview",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Draws a thumbnail under a Claude reply that names a screenshot path, with a click to open it",
   "author": {
     "name": "Yuri Mikhin",
