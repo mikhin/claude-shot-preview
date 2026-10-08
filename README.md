@@ -7,8 +7,8 @@ A Claude Code mod for the reply that says `Screenshot: /var/folders/…/screensh
 Inside Claude Code, run:
 
 ```
-/plugin marketplace add mikhin/claude-shot-preview
-/plugin install shot-preview
+/plugin marketplace add mikhin/claude-plugins
+/plugin install shot-preview@mikhin
 /reload-plugins
 ```
 
